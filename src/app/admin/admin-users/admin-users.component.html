@@ -1,0 +1,63 @@
+<div class="container">
+
+  <h2>Admin - Gestion des utilisateurs</h2>
+
+  <!-- FORM -->
+  <div class="form">
+
+    <input type="text" placeholder="Nom" [(ngModel)]="selectedUser.nom">
+    <input type="text" placeholder="Prénom" [(ngModel)]="selectedUser.prenom">
+    <input type="email" placeholder="Email" [(ngModel)]="selectedUser.email">
+    <input type="password" placeholder="Password" [(ngModel)]="selectedUser.password">
+
+    <select [(ngModel)]="selectedUser.role">
+      <option *ngFor="let r of roles" [value]="r">
+        {{ r }}
+      </option>
+    </select>
+
+  <!-- FORM BUTTON -->
+<button class="save-btn" (click)="saveUser()">
+  💾 {{ isEdit ? 'Modifier' : 'Créer' }}
+</button>
+
+<button class="cancel-btn" (click)="resetForm()" *ngIf="isEdit">
+  ❌ Annuler
+</button>
+
+  </div>
+
+  <hr>
+
+  <!-- TABLE -->
+  <table border="1" width="100%">
+    <tr>
+      <th>ID</th>
+      <th>Nom</th>
+      <th>Prénom</th>
+      <th>Email</th>
+      <th>Role</th>
+      <th>Actions</th>
+    </tr>
+
+    <tr *ngFor="let user of users">
+      <td>{{ user.id }}</td>
+      <td>{{ user.nom }}</td>
+      <td>{{ user.prenom }}</td>
+      <td>{{ user.email }}</td>
+      <td>{{ user.role }}</td>
+
+      <td>
+  <button class="action-btn edit-btn" (click)="editUser(user)">
+    ✏️ Edit
+  </button>
+
+  <button class="action-btn delete-btn" (click)="deleteUser(user.id)">
+    🗑 Delete
+  </button>
+</td>
+    </tr>
+
+  </table>
+
+</div>

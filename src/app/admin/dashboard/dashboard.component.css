@@ -1,0 +1,79 @@
+/* 🌌 GLOBAL */
+.dashboard {
+  display: flex;
+  height: 100vh;
+  background: linear-gradient(135deg, #0f2027, #2c5364, #000000);
+  color: white;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* 📌 SIDEBAR */
+.sidebar {
+  width: 220px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  border-right: 1px solid #222;
+}
+
+.sidebar h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #00c6ff;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar li {
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.sidebar li:hover {
+  background: #00c6ff;
+  color: black;
+}
+
+.sidebar .active {
+  background: linear-gradient(135deg, #00c6ff, #0072ff);
+}
+
+/* 🧠 MAIN */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 🔝 NAVBAR */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 25px;
+  background: rgba(0, 0, 0, 0.6);
+  border-bottom: 1px solid #222;
+}
+
+.navbar h3 {
+  color: #00c6ff;
+}
+
+.profile {
+  background: #00c6ff;
+  padding: 6px 12px;
+  border-radius: 20px;
+  color: black;
+  font-weight: bold;
+}
+
+/* 📊 CONTENT */
+.content {
+  padding: 20px;
+  overflow-y: auto;
+}

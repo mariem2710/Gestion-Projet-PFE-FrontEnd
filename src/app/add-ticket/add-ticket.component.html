@@ -1,0 +1,44 @@
+<div class="container">
+
+  <h2>Créer un Ticket</h2>
+
+  <!-- TITRE -->
+  <input
+    type="text"
+    placeholder="Titre"
+    [(ngModel)]="ticket.titre">
+
+  <!-- DESCRIPTION -->
+  <textarea
+    placeholder="Description"
+    [(ngModel)]="ticket.description">
+  </textarea>
+
+  <!-- STATUT -->
+  <select [(ngModel)]="ticket.statut">
+    <option value="TODO">TODO</option>
+    <option value="IN_PROGRESS">IN PROGRESS</option>
+    <option value="DONE">DONE</option>
+  </select>
+
+  <!-- PRIORITÉ -->
+  <select [(ngModel)]="ticket.priorite">
+    <option value="LOW">LOW</option>
+    <option value="MEDIUM">MEDIUM</option>
+    <option value="HIGH">HIGH</option>
+  </select>
+
+  <!-- DATE SOUHAITÉE -->
+  <input
+    type="date"
+    [(ngModel)]="ticket.dateSouhaite">
+
+  <!-- BUTTON -->
+  <button (click)="createTicket()">
+    Créer Ticket
+  </button>
+
+  <!-- MESSAGE -->
+  <p style="color:green">{{ message }}</p>
+
+</div>

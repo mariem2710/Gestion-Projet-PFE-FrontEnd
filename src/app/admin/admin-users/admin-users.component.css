@@ -1,0 +1,143 @@
+/* 🌌 Background global */
+body {
+  background: radial-gradient(circle at top, #1b2735, #090a0f);
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  color: #e6edf3;
+}
+
+/* 📦 Container */
+.container {
+  max-width: 1150px;
+  margin: 40px auto;
+  padding: 25px;
+  border-radius: 16px;
+  background: rgba(20, 25, 35, 0.85);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+}
+
+/* 🧠 Title */
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: 600;
+  color: #4fc3f7;
+}
+
+/* 🧾 Form */
+.form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+/* Inputs */
+input, select {
+  padding: 11px;
+  border-radius: 10px;
+  border: 1px solid #2f3b52;
+  background: #0f1722;
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+input::placeholder {
+  color: #888;
+}
+
+input:focus, select:focus {
+  border-color: #4fc3f7;
+  box-shadow: 0 0 8px rgba(79, 195, 247, 0.6);
+}
+
+/* 🎯 Buttons global */
+button {
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* 💾 Save / Create */
+button.save-btn {
+  background: linear-gradient(135deg, #4fc3f7, #1976d2);
+  color: white;
+}
+
+button.save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 195, 247, 0.5);
+}
+
+/* ❌ Cancel */
+button.cancel-btn {
+  background: #2f3b52;
+  color: #ccc;
+}
+
+button.cancel-btn:hover {
+  background: #3e4b66;
+}
+
+/* 📊 Table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Header */
+th {
+  background: #111827;
+  padding: 12px;
+  text-align: left;
+  font-size: 14px;
+  color: #9fb3c8;
+}
+
+/* Rows */
+td {
+  padding: 10px;
+  border-bottom: 1px solid #1f2a3a;
+}
+
+/* Hover */
+tr:hover {
+  background: rgba(79, 195, 247, 0.05);
+}
+
+/* 🎛 Action buttons */
+.action-btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+/* ✏️ Edit */
+.edit-btn {
+  background: rgba(79, 195, 247, 0.15);
+  color: #4fc3f7;
+}
+
+.edit-btn:hover {
+  background: rgba(79, 195, 247, 0.3);
+}
+
+/* 🗑 Delete */
+.delete-btn {
+  background: rgba(255, 77, 77, 0.15);
+  color: #ff4d4d;
+}
+
+.delete-btn:hover {
+  background: rgba(255, 77, 77, 0.3);
+}

@@ -1,0 +1,44 @@
+<p>metier-dashboard works!</p>
+<div class="dashboard">
+
+  <h2>📊 Metier Dashboard</h2>
+
+  <!-- ALL TICKETS -->
+  <h3>📋 Tous les tickets</h3>
+  <div *ngFor="let t of tickets" class="card">
+
+    <h4>{{ t.titre }}</h4>
+    <p>{{ t.description }}</p>
+    <p>Status: {{ t.statut }}</p>
+
+    <button (click)="deleteTicket(t.id!)">🗑 Delete</button>
+<button (click)="selectTicket(t.id!)">
+  💬 Commenter
+</button>
+  </div>
+
+  <hr>
+<p *ngIf="selectedTicketId" style="color:blue">
+  Ticket sélectionné: {{ selectedTicketId }}
+</p>
+  <!-- TODO TICKETS -->
+  <h3>🟡 Tickets TODO</h3>
+  <div *ngFor="let t of todoTickets" class="card todo">
+
+    <h4>{{ t.titre }}</h4>
+    <p>{{ t.description }}</p>
+
+  </div>
+
+  <hr>
+
+  <!-- COMMENT SECTION -->
+  <h3>💬 Ajouter commentaire</h3>
+
+  <input type="text"
+         placeholder="Votre commentaire"
+         [(ngModel)]="commentText">
+
+  <button (click)="addComment()">Ajouter</button>
+
+</div>
