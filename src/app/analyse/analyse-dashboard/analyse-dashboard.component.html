@@ -1,0 +1,471 @@
+<div class="app-root">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="brand">Ticket<span>Flow</span></span>
+      <div class="breadcrumb">
+        <span>BA Dashboard</span><span>›</span>
+        <span class="cur">
+          {{ view === 'tickets'  ? 'Tickets À faire'
+           : view === 'valides'  ? 'Tickets Validés'
+           : view === 'profile'  ? 'Profil'
+           : 'Rapports' }}
+        </span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="dot-online"></span>
+      <div class="user-pill">
+        <div class="user-avatar">BA</div>
+        Business Analyst
+      </div>
+    </div>
+  </header>
+
+  <div class="main-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-section">Navigation</div>
+
+      <div class="nav-item" [class.active]="view === 'tickets'"
+           (click)="view = 'tickets'; loadTickets()">
+        <span class="nav-icon">◈</span>
+        Tickets À faire
+        <span class="nav-badge">{{ tickets.length }}</span>
+      </div>
+
+      <!-- ← Nouvelle entrée Tickets Validés -->
+      <div class="nav-item" [class.active]="view === 'valides'"
+           (click)="view = 'valides'">
+        <span class="nav-icon">✓</span>
+        Tickets Validés
+        <span class="nav-badge nav-badge-done">{{ ticketsValides.length }}</span>
+      </div>
+
+      <div class="sidebar-section" style="margin-top:12px;">Priorités</div>
+      <div class="nav-item"
+           (click)="filterPriorite='HIGH'; view='tickets'; applyFilters()">
+        <span class="dot-status" style="background:#e05555"></span>
+        Haute
+        <span class="nav-badge">{{ countByPrio('HIGH') }}</span>
+      </div>
+      <div class="nav-item"
+           (click)="filterPriorite='MEDIUM'; view='tickets'; applyFilters()">
+        <span class="dot-status" style="background:#d4a017"></span>
+        Moyenne
+        <span class="nav-badge">{{ countByPrio('MEDIUM') }}</span>
+      </div>
+      <div class="nav-item"
+           (click)="filterPriorite='LOW'; view='tickets'; applyFilters()">
+        <span class="dot-status" style="background:#606060"></span>
+        Basse
+        <span class="nav-badge">{{ countByPrio('LOW') }}</span>
+      </div>
+
+      <div class="sidebar-section" style="margin-top:12px;">Compte</div>
+      <div class="nav-item" [class.active]="view === 'profile'"
+           (click)="view = 'profile'">
+        <span class="nav-icon">◎</span>Profil
+      </div>
+      <div class="nav-item" [class.active]="view === 'reports'"
+           (click)="view = 'reports'">
+        <span class="nav-icon">◇</span>Rapports
+      </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="content">
+
+      <!-- ══════════════════════════════
+           VUE TICKETS À FAIRE
+      ══════════════════════════════ -->
+      <ng-container *ngIf="view === 'tickets'">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Tickets en attente</div>
+            <div class="page-sub">Statut : À faire — consultation et validation</div>
+          </div>
+        </div>
+
+        <div class="stats-bar">
+          <div class="stat-card">
+            <div class="stat-label">Total</div>
+            <div class="stat-value">{{ tickets.length }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Haute priorité</div>
+            <div class="stat-value" style="color:#e05555">{{ countByPrio('HIGH') }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Moyenne priorité</div>
+            <div class="stat-value todo-color">{{ countByPrio('MEDIUM') }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Basse priorité</div>
+            <div class="stat-value" style="color:#606060">{{ countByPrio('LOW') }}</div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="search-wrap">
+            <span class="search-icon">⌕</span>
+            <input type="text" placeholder="Rechercher un ticket…"
+                   [(ngModel)]="searchTerm"
+                   (ngModelChange)="applyFilters()"/>
+          </div>
+          <select [(ngModel)]="filterPriorite" (ngModelChange)="applyFilters()">
+            <option value="">Toutes les priorités</option>
+            <option value="HIGH">Haute</option>
+            <option value="MEDIUM">Moyenne</option>
+            <option value="LOW">Basse</option>
+          </select>
+        </div>
+
+        <div class="empty-state" *ngIf="isLoading">
+          <div class="empty-icon">↻</div>Chargement…
+        </div>
+        <div class="empty-state" *ngIf="!isLoading && errorMessage">
+          <div class="empty-icon">⚠</div>{{ errorMessage }}
+        </div>
+
+        <div class="table-wrap" *ngIf="!isLoading && !errorMessage">
+          <div class="empty-state" *ngIf="filtered.length === 0">
+            <div class="empty-icon">✓</div>Aucun ticket trouvé.
+          </div>
+          <table *ngIf="filtered.length > 0">
+            <thead>
+              <tr>
+                <th>ID</th><th>Titre</th><th>Priorité</th>
+                <th>Statut</th><th>Créé le</th><th>Souhaité</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let t of filtered">
+                <td><span class="ticket-id">#{{ t.id }}</span></td>
+                <td class="td-titre">{{ t.titre }}</td>
+                <td>
+                  <span [class]="getPrioriteClass(t.priorite)">
+                    <span class="prio-dot"></span>
+                    {{ getPrioriteLabel(t.priorite) }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge badge-todo">
+                    <span class="badge-dot"></span>À faire
+                  </span>
+                </td>
+                <td style="color:var(--text2);font-size:12px;">
+                  {{ t.dateCreation | date:'dd/MM/yyyy' }}
+                </td>
+                <td style="color:var(--text3);font-size:12px;">
+                  {{ t.dateSouhaite ? (t.dateSouhaite | date:'dd/MM/yyyy') : '—' }}
+                </td>
+                <td>
+                  <button class="btn-details" (click)="openDetails(t)">
+                    <svg viewBox="0 0 16 16" fill="none"
+                         stroke="currentColor" stroke-width="1.8">
+                      <circle cx="8" cy="8" r="6"/>
+                      <line x1="8" y1="7" x2="8" y2="11"/>
+                      <circle cx="8" cy="5" r="0.5" fill="currentColor"/>
+                    </svg>
+                    Voir détails
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+
+      <!-- ══════════════════════════════
+           VUE TICKETS VALIDÉS  ← NOUVEAU
+      ══════════════════════════════ -->
+      <ng-container *ngIf="view === 'valides'">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Tickets validés</div>
+            <div class="page-sub">
+              Tickets confirmés avec domaines assignés — session en cours
+            </div>
+          </div>
+          <div class="valide-count-pill">
+            <span class="vc-dot"></span>
+            {{ ticketsValides.length }} validé{{ ticketsValides.length !== 1 ? 's' : '' }}
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div class="empty-state" *ngIf="ticketsValides.length === 0">
+          <div class="empty-icon">◈</div>
+          Aucun ticket validé pour le moment.
+        </div>
+
+        <!-- Cartes tickets validés -->
+        <div class="valides-grid" *ngIf="ticketsValides.length > 0">
+          <div class="valide-card" *ngFor="let tv of ticketsValides; let i = index">
+
+            <!-- Card header -->
+            <div class="vc-header">
+              <div class="vc-header-left">
+                <span class="ticket-id">#{{ tv.ticket.id }}</span>
+                <span class="badge badge-done">
+                  <span class="badge-dot"></span>Validé
+                </span>
+              </div>
+              <div class="vc-header-right">
+                <span class="vc-date">
+                  {{ tv.dateValidation | date:'dd/MM/yyyy HH:mm' }}
+                </span>
+                <button class="btn-remove-valide" (click)="retirerTicketValide(i)"
+                        title="Retirer de la liste">
+                  <svg viewBox="0 0 16 16" fill="none"
+                       stroke="currentColor" stroke-width="2">
+                    <line x1="4" y1="4" x2="12" y2="12"/>
+                    <line x1="12" y1="4" x2="4"  y2="12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Titre + priorité -->
+            <div class="vc-titre">{{ tv.ticket.titre }}</div>
+            <div class="vc-meta">
+              <span [class]="getPrioriteClass(tv.ticket.priorite)">
+                <span class="prio-dot"></span>
+                {{ getPrioriteLabel(tv.ticket.priorite) }}
+              </span>
+              <span class="vc-sep">·</span>
+              <span class="vc-date-souhait">
+                Souhaité : {{ tv.ticket.dateSouhaite
+                  ? (tv.ticket.dateSouhaite | date:'dd/MM/yyyy')
+                  : '—' }}
+              </span>
+            </div>
+
+            <!-- Description -->
+            <div class="vc-desc" *ngIf="tv.ticket.description">
+              {{ tv.ticket.description }}
+            </div>
+
+            <!-- Domaines assignés -->
+            <div class="vc-domaines-section">
+              <div class="vc-domaines-label">
+                Domaines assignés
+                <span class="vc-domaines-count">{{ tv.domaines.length }}</span>
+              </div>
+              <div class="vc-domaines-list">
+                <div class="vc-domaine-item"
+                     *ngFor="let d of tv.domaines; let j = index">
+                  <span class="vc-domaine-rank">{{ j + 1 }}</span>
+                  <span class="vc-domaine-name">{{ d }}</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- VUE PROFIL -->
+      <ng-container *ngIf="view === 'profile'">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Mon profil</div>
+            <div class="page-sub">Informations du compte Business Analyst</div>
+          </div>
+        </div>
+        <div class="table-wrap" style="padding:32px; max-width:420px;">
+          <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px;">
+            <div class="user-avatar" style="width:48px;height:48px;font-size:16px;">BA</div>
+            <div>
+              <div style="font-size:15px; font-weight:500; color:var(--text1);">
+                Business Analyst
+              </div>
+              <div style="font-size:12px; color:var(--text3);">
+                Accès lecture — Tickets À faire
+              </div>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--border); padding-top:16px;
+                      font-size:13px; color:var(--text2); line-height:2;">
+            <div>Rôle : <span style="color:var(--text1);">Analyste Métier</span></div>
+            <div>Périmètre : <span style="color:var(--todo);">À faire uniquement</span></div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- VUE RAPPORTS -->
+      <ng-container *ngIf="view === 'reports'">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Rapports</div>
+            <div class="page-sub">Synthèse des tickets en attente</div>
+          </div>
+        </div>
+        <div class="stats-bar">
+          <div class="stat-card">
+            <div class="stat-label">Total À faire</div>
+            <div class="stat-value">{{ tickets.length }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Haute</div>
+            <div class="stat-value" style="color:#e05555">{{ countByPrio('HIGH') }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Moyenne</div>
+            <div class="stat-value todo-color">{{ countByPrio('MEDIUM') }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Basse</div>
+            <div class="stat-value" style="color:#606060">{{ countByPrio('LOW') }}</div>
+          </div>
+        </div>
+      </ng-container>
+
+    </main>
+  </div>
+
+  <!-- OVERLAY PANEL -->
+  <div class="overlay" *ngIf="showPanel" (click)="closePanel()"></div>
+
+  <!-- PANEL DÉTAILS -->
+  <div class="detail-panel" *ngIf="showPanel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Détails du ticket</div>
+        <div class="panel-sub">Ticket #{{ selectedTicket?.id }}</div>
+      </div>
+      <button class="btn-close" (click)="closePanel()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="4" y1="4" x2="12" y2="12"/>
+          <line x1="12" y1="4" x2="4" y2="12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="panel-body">
+      <div class="detail-field">
+        <div class="detail-label">Titre</div>
+        <div class="detail-value">{{ selectedTicket?.titre }}</div>
+      </div>
+      <div class="detail-row two-col">
+        <div class="detail-field">
+          <div class="detail-label">Priorité</div>
+          <div class="detail-value">
+            <span [class]="getPrioriteClass(selectedTicket?.priorite ?? '')">
+              <span class="prio-dot"></span>
+              {{ getPrioriteLabel(selectedTicket?.priorite ?? '') }}
+            </span>
+          </div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-label">Statut</div>
+          <div class="detail-value">
+            <span class="badge badge-todo">
+              <span class="badge-dot"></span>À faire
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="detail-row two-col">
+        <div class="detail-field">
+          <div class="detail-label">Date de création</div>
+          <div class="detail-value">
+            {{ selectedTicket?.dateCreation | date:'dd/MM/yyyy' }}
+          </div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-label">Date souhaitée</div>
+          <div class="detail-value">
+            {{ selectedTicket?.dateSouhaite
+               ? (selectedTicket?.dateSouhaite | date:'dd/MM/yyyy') : '—' }}
+          </div>
+        </div>
+      </div>
+      <div class="detail-field" *ngIf="selectedTicket?.description">
+        <div class="detail-label">Description</div>
+        <div class="detail-value detail-desc">{{ selectedTicket?.description }}</div>
+      </div>
+      <div *ngIf="actionMessage"
+           [class]="'action-msg action-' + actionType">
+        {{ actionMessage }}
+      </div>
+    </div>
+
+    <div class="panel-footer">
+      <button class="btn-rejeter" (click)="rejeter()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="4" y1="4" x2="12" y2="12"/>
+          <line x1="12" y1="4" x2="4" y2="12"/>
+        </svg>
+        Rejeter
+      </button>
+      <button class="btn-valider" (click)="ouvrirSelectionDomaine()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3,8 7,12 13,4"/>
+        </svg>
+        Valider
+      </button>
+    </div>
+  </div>
+
+  <!-- MODALE SÉLECTION DOMAINES -->
+  <div class="modal-overlay" *ngIf="showDomaineModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Assigner les domaines</div>
+        <div class="modal-sub">
+          Sélectionnez un ou plusieurs domaines par ordre de priorité —
+          ticket <strong>#{{ selectedTicket?.id }}</strong>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="domaine-grid">
+          <div class="domaine-item"
+               *ngFor="let d of domaines"
+               [class.selected]="isDomainSelected(d)"
+               (click)="toggleDomaine(d)">
+            <span class="domaine-rank" *ngIf="isDomainSelected(d)">
+              {{ getDomaineRank(d) }}
+            </span>
+            {{ d }}
+          </div>
+        </div>
+        <div class="domaine-order-section" *ngIf="selectedDomaines.length > 0">
+          <div class="domaine-order-title">Ordre de priorité sélectionné</div>
+          <div class="domaine-order-list">
+            <div class="domaine-order-item"
+                 *ngFor="let d of selectedDomaines; let i = index">
+              <span class="order-badge">{{ i + 1 }}</span>
+              <span class="order-label">{{ d }}</span>
+              <button class="order-remove" (click)="toggleDomaine(d)" title="Retirer">
+                <svg viewBox="0 0 16 16" fill="none"
+                     stroke="currentColor" stroke-width="2">
+                  <line x1="4" y1="4" x2="12" y2="12"/>
+                  <line x1="12" y1="4" x2="4" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="domaine-hint" *ngIf="selectedDomaines.length === 0">
+          Cliquez sur les domaines dans l'ordre souhaité
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal-cancel" (click)="annulerDomaine()">Annuler</button>
+        <button class="btn-modal-confirm"
+                (click)="confirmerValidation()"
+                [disabled]="selectedDomaines.length === 0">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3,8 7,12 13,4"/>
+          </svg>
+          Confirmer ({{ selectedDomaines.length }} domaine{{ selectedDomaines.length > 1 ? 's' : '' }})
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -1,10 +1,27 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+
 export interface LoginRequest {
   email: string;
   password: string;
 }
+
+/*
+Backend JWT response :
+
+{
+   "token": "xxxxx",
+   "email": "user@gmail.com",
+   "role": "ADMIN"
+}
+*/
+export interface LoginResponse {
+  token: string;
+  email: string;
+  role: string;
+}
+
 export interface User {
   id: number;
   nom: string;
@@ -12,28 +29,120 @@ export interface User {
   email: string;
   role: string;
 }
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
+
   private apiUrl = 'http://localhost:8070/api/users';
+
   constructor(private http: HttpClient) {}
 
-  login(data: LoginRequest): Observable<User> {
-    return this.http.post<User>(`${this.apiUrl}/login`, data).pipe(
-      tap(user => {
-        localStorage.setItem('user', JSON.stringify(user));
+  // ─────────────────────────────────────────────
+  // LOGIN AVEC JWT
+  // ─────────────────────────────────────────────
+  login(data: LoginRequest): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(
+      `${this.apiUrl}/login`,
+      data
+    ).pipe(
+      tap((response) => {
+        // stockage local
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('email', response.email);
+        localStorage.setItem('role', response.role);
+
+        // affichage dans inspecteur navigateur (F12 → Console)
+        console.log('==============================');
+        console.log('Utilisateur connecté :', response.email);
+        console.log('Role :', response.role);
+        console.log('JWT Token :', response.token);
+        console.log('==============================');
       })
     );
   }
-  logout() {
-    localStorage.removeItem('user');
+
+  // ─────────────────────────────────────────────
+  // LOGOUT
+  // ─────────────────────────────────────────────
+  logout(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('email');
+    localStorage.removeItem('role');
   }
-  getCurrentUser(): User | null {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
+
+  // ─────────────────────────────────────────────
+  // GET CURRENT USER
+  // ─────────────────────────────────────────────
+  getCurrentUser(): string | null {
+    return localStorage.getItem('email');
   }
+
+  // ─────────────────────────────────────────────
+  // GET ROLE
+  // ─────────────────────────────────────────────
+  getRole(): string | null {
+    return localStorage.getItem('role');
+  }
+
+  // ─────────────────────────────────────────────
+  // GET TOKEN
+  // ─────────────────────────────────────────────
+  getToken(): string | null {
+    return localStorage.getItem('token');
+  }
+
+  // ─────────────────────────────────────────────
+  // CHECK LOGIN
+  // ─────────────────────────────────────────────
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('user');
+    return !!localStorage.getItem('token');
+  }
+
+  // ─────────────────────────────────────────────
+  // REGISTER / DEMANDE DE COMPTE
+  // ─────────────────────────────────────────────
+  register(data: any): Observable<any> {
+    return this.http.post(
+      `${this.apiUrl}/demande`,
+      data
+    );
+  }
+
+  demanderCompte(data: any): Observable<any> {
+    return this.http.post(
+      `${this.apiUrl}/demande`,
+      data
+    );
+  }
+
+  // ─────────────────────────────────────────────
+  // ADMIN : ACCEPTER COMPTE
+  // ─────────────────────────────────────────────
+  accepterCompte(id: number, password: string): Observable<any> {
+    return this.http.put(
+      `${this.apiUrl}/${id}/accepter`,
+      { password }
+    );
+  }
+
+  // ─────────────────────────────────────────────
+  // ADMIN : REFUSER COMPTE
+  // ─────────────────────────────────────────────
+  refuserCompte(id: number): Observable<any> {
+    return this.http.put(
+      `${this.apiUrl}/${id}/refuser`,
+      {}
+    );
+  }
+
+  // ─────────────────────────────────────────────
+  // ADMIN : DEMANDES EN ATTENTE
+  // ─────────────────────────────────────────────
+  getDemandesEnAttente(): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.apiUrl}/demandes/en-attente`
+    );
   }
 }

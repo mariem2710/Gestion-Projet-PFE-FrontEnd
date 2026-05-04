@@ -15,6 +15,7 @@ export interface User {
   email: string;
   password?: string;
   role: Role;
+  statut?: string; // EN_ATTENTE | ACCEPTE | REFUSE
 }
 
 @Injectable({
@@ -26,28 +27,44 @@ export class UserService {
 
   constructor(private http: HttpClient) {}
 
-  // GET ALL
+  // ── Utilisateurs ─────────────────────────────────
   getUsers(): Observable<User[]> {
     return this.http.get<User[]>(this.apiUrl);
   }
 
-  // GET BY ID
   getUserById(id: number): Observable<User> {
     return this.http.get<User>(`${this.apiUrl}/${id}`);
   }
 
-  // CREATE
   createUser(user: User): Observable<User> {
     return this.http.post<User>(this.apiUrl, user);
   }
 
-  // UPDATE
   updateUser(id: number, user: User): Observable<User> {
     return this.http.put<User>(`${this.apiUrl}/${id}`, user);
   }
 
-  // DELETE
   deleteUser(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  // ── Demandes de compte ───────────────────────────
+  getDemandesEnAttente(): Observable<User[]> {
+    return this.http.get<User[]>(`${this.apiUrl}/demandes/en-attente`);
+  }
+
+  accepterCompte(id: number, password: string): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}/${id}/accepter`, { password });
+  }
+
+  refuserCompte(id: number): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}/${id}/refuser`, {});
+  }
+
+  // ── Demande création (user métier) ───────────────
+   demanderCompte(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/demande`, data);
+    //                                    ↑
+    // URL finale : http://localhost:8070/api/users/demande ✅
   }
 }

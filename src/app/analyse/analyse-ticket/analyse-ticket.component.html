@@ -1,0 +1,55 @@
+<div class="tickets-container">
+
+  <div class="header">
+    <h2>📋 Tickets TODO</h2>
+    <p>Liste des tickets en attente de traitement Business Analyst</p>
+  </div>
+
+  <div class="tickets-grid">
+
+    <div *ngFor="let t of tickets" class="ticket-card">
+
+      <!-- HEADER CARD -->
+      <div class="ticket-top">
+
+        <div class="ticket-title">
+          📌 {{ t.titre }}
+        </div>
+
+        <span class="badge status">
+          {{ t.statut }}
+        </span>
+
+      </div>
+
+      <!-- DESCRIPTION -->
+      <p class="description">
+        {{ t.description }}
+      </p>
+
+      <!-- INFOS META -->
+      <div class="meta">
+
+        <span>🔥 Priorité : {{ t.priorite }}</span>
+
+        <span>📅 Créé : {{ t.dateCreation | date:'shortDate' }}</span>
+
+        <span *ngIf="t.dateSouhaite">
+          ⏳ Souhaité : {{ t.dateSouhaite | date:'shortDate' }}
+        </span>
+
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="actions">
+
+        <button class="btn primary" (click)="openDetails(t.id!)">
+  👁 Voir détails
+</button>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>

@@ -1,78 +1,160 @@
-import { Component, NgModule, OnInit } from '@angular/core';
-import { UserService, User, Role } from '../../services/user.service';
-import { NgFor, NgIf } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { UserService, User, Role } from '../../services/user.service';
 
 @Component({
   selector: 'app-admin-users',
-  imports:[NgFor,NgIf,FormsModule],
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './admin-users.component.html',
-  styleUrl:'./admin-users.component.css'
+  styleUrls: ['./admin-users.component.css']
 })
 export class AdminUsersComponent implements OnInit {
 
-  users: User[] = [];
+  users:    User[] = [];
+  filtered: User[] = [];
+  isLoading    = false;
+  errorMessage = '';
 
-  selectedUser: User = {
-    nom: '',
-    prenom: '',
-    email: '',
-    password: '',
-    role: Role.METIER
-  };
+  // ── Recherche & tri ──────────────────────────────
+  searchTerm = '';
+  sortCol    = 'nom';
+  sortAsc    = true;
 
-  isEdit = false;
+  // ── Pagination ───────────────────────────────────
+  pageSize    = 10;
+  currentPage = 1;
 
-  roles = Object.values(Role);
+  // ── Modal ────────────────────────────────────────
+  showModal = false;
+  editUser: User | null = null;
+  form: Partial<User> = { nom:'', prenom:'', email:'', role: Role.METIER };
+
+  // Expose Role enum au template
+  Role = Role;
 
   constructor(private userService: UserService) {}
 
-  ngOnInit(): void {
-    this.loadUsers();
-  }
+  ngOnInit(): void { this.loadUsers(); }
 
-  loadUsers() {
-    this.userService.getUsers().subscribe(data => {
-      this.users = data;
+  loadUsers(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.userService.getUsers().subscribe({
+      next: (data) => { this.users = data; this.applyFilter(); this.isLoading = false; },
+      error: ()    => { this.errorMessage = 'Erreur de chargement.'; this.isLoading = false; }
     });
   }
 
-  saveUser() {
-    if (this.isEdit && this.selectedUser.id) {
-      this.userService.updateUser(this.selectedUser.id, this.selectedUser)
-        .subscribe(() => {
-          this.resetForm();
-          this.loadUsers();
-        });
+  // ── KPI ──────────────────────────────────────────
+  get totalUsers()  { return this.users.length; }
+  get countAdmins() { return this.users.filter(u => u.role === Role.ADMIN).length; }
+  get countMetier() { return this.users.filter(u => u.role === Role.METIER).length; }
+  get countBA()     { return this.users.filter(u => u.role === Role.BUSINESS_ANALYST).length; }
+
+  // ── Filtrage / tri ───────────────────────────────
+  onSearch(): void { this.currentPage = 1; this.applyFilter(); }
+
+  applyFilter(): void {
+    const q = this.searchTerm.toLowerCase();
+    let list = this.users.filter(u =>
+      [u.nom, u.prenom, u.email].some(v => v?.toLowerCase().includes(q))
+    );
+    list = list.sort((a, b) => {
+      const va = (a as any)[this.sortCol] ?? '';
+      const vb = (b as any)[this.sortCol] ?? '';
+      return this.sortAsc
+        ? String(va).localeCompare(String(vb))
+        : String(vb).localeCompare(String(va));
+    });
+    this.filtered = list;
+  }
+
+  sort(col: string): void {
+    if (this.sortCol === col) this.sortAsc = !this.sortAsc;
+    else { this.sortCol = col; this.sortAsc = true; }
+    this.applyFilter();
+  }
+
+  // ── Pagination ───────────────────────────────────
+  get totalPages() { return Math.ceil(this.filtered.length / this.pageSize) || 1; }
+  get pages()      { return Array.from({length: this.totalPages}, (_, i) => i + 1); }
+  get paginated()  { const s = (this.currentPage - 1) * this.pageSize; return this.filtered.slice(s, s + this.pageSize); }
+  goPage(p: number) { if (p >= 1 && p <= this.totalPages) this.currentPage = p; }
+
+  // ── Modal ────────────────────────────────────────
+  openModal(u?: User): void {
+    this.editUser = u ?? null;
+    this.form = u
+      ? { nom: u.nom, prenom: u.prenom, email: u.email, role: u.role }
+      : { nom: '', prenom: '', email: '', role: Role.METIER };
+    this.showModal = true;
+  }
+  closeModal(): void { this.showModal = false; }
+
+  saveUser(): void {
+    if (this.editUser) {
+      this.userService.updateUser(this.editUser.id!, this.form as User).subscribe({
+        next: () => { this.closeModal(); this.loadUsers(); },
+        error: () => alert('Erreur lors de la mise à jour.')
+      });
     } else {
-      this.userService.createUser(this.selectedUser)
-        .subscribe(() => {
-          this.resetForm();
-          this.loadUsers();
-        });
+      this.userService.createUser(this.form as User).subscribe({
+        next: () => { this.closeModal(); this.loadUsers(); },
+        error: () => alert('Erreur lors de la création.')
+      });
     }
   }
 
-  editUser(user: User) {
-    this.selectedUser = { ...user };
-    this.isEdit = true;
-  }
-
-  deleteUser(id?: number) {
-    if (!id) return;
-    this.userService.deleteUser(id).subscribe(() => {
-      this.loadUsers();
+  deleteUser(u: User): void {
+    if (!confirm(`Supprimer ${u.nom} ${u.prenom} ?`)) return;
+    this.userService.deleteUser(u.id!).subscribe({
+      next: () => this.loadUsers(),
+      error: () => alert('Erreur lors de la suppression.')
     });
   }
 
-  resetForm() {
-    this.selectedUser = {
-      nom: '',
-      prenom: '',
-      email: '',
-      password: '',
-      role: Role.METIER
-    };
-    this.isEdit = false;
+  // ── Helpers visuels ──────────────────────────────
+  initials(u: User): string {
+    return ((u.nom?.[0] ?? '') + (u.prenom?.[0] ?? '')).toUpperCase() || '?';
+  }
+
+  private readonly PALETTES = [
+    { bg: 'rgba(74,144,217,.18)',  color: '#6eaaec' },
+    { bg: 'rgba(61,176,122,.18)',  color: '#3db07a' },
+    { bg: 'rgba(212,160,23,.18)', color: '#d4a017' },
+    { bg: 'rgba(180,100,220,.18)',color: '#b464dc' },
+    { bg: 'rgba(224,85,85,.18)',  color: '#e05555' },
+  ];
+  avatarBg(u: User): string {
+    const i = (u.nom?.charCodeAt(0) ?? 0) % this.PALETTES.length;
+    return this.PALETTES[i].bg;
+  }
+  avatarColor(u: User): string {
+    const i = (u.nom?.charCodeAt(0) ?? 0) % this.PALETTES.length;
+    return this.PALETTES[i].color;
+  }
+
+  getRoleClass(role: Role): string {
+    if (role === Role.ADMIN)            return 'badge badge-admin';
+    if (role === Role.BUSINESS_ANALYST) return 'badge badge-agent';
+    return 'badge badge-user';
+  }
+  getRoleLabel(role: Role): string {
+    if (role === Role.ADMIN)            return 'Admin';
+    if (role === Role.BUSINESS_ANALYST) return 'Business Analyst';
+    return 'Métier';
+  }
+
+  getStatutClass(statut?: string): string {
+    if (statut === 'ACCEPTE')    return 'badge badge-active';
+    if (statut === 'REFUSE')     return 'badge badge-inactive';
+    return 'badge badge-todo';
+  }
+  getStatutLabel(statut?: string): string {
+    if (statut === 'ACCEPTE')    return 'Accepté';
+    if (statut === 'REFUSE')     return 'Refusé';
+    return 'En attente';
   }
 }
